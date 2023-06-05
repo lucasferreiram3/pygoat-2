@@ -28,7 +28,20 @@ jobs:
           java -jar /opt/veracode/pipeline-scan.jar -vid "${{ secrets.VID }}" -vkey "${{ secrets.VKEY }}" -f pygoat.zip -aid "1242124" -p "PyGoat-Showroom"
                 
         continue-on-error: true
-
+        
+  Veracode-SAST-Sandbox-Scan:
+    runs-on: ubuntu-latest
+    container:
+      image: veracode/api-wrapper-java:latest
+      options: --user root
+    steps:
+    - uses: actions/checkout@master
+               
+    - name: scan 
+      run: |
+          zip -r pygoat.zip . -i '*.py' '*.html' '*.js'
+          java -jar /opt/veracode/api-wrapper.jar -vid "${{ secrets.VID }}" -vkey "${{ secrets.VKEY }}" -action UploadAndScan -createprofile false -appname "Pygoat-Showroom" -version "${{ github.run_id }}" -filepath pygoat.zip -createsandbox true -sandboxname SANDBOX_2
+  
   Veracode-SCA-Agent-Action:
     runs-on: ubuntu-latest
     container:
@@ -58,3 +71,4 @@ jobs:
           curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan $EXTRA_ARGS
          
         continue-on-error: true
+        
