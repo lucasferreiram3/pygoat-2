@@ -28,3 +28,33 @@ jobs:
           java -jar /opt/veracode/pipeline-scan.jar -vid "${{ secrets.VID }}" -vkey "${{ secrets.VKEY }}" -f pygoat.zip -aid "1242124" -p "PyGoat-Showroom"
                 
         continue-on-error: true
+
+  Veracode-SCA-Agent-Action:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.11.0b1-buster
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: pip install
+        run: |
+          python -m pip install --no-cache-dir pip==22.0.4
+      
+      - name: Listing
+        run: |
+          ls -lah
+      
+      - name: Run Veracode SCA
+        env:
+          SRCCLR_API_TOKEN: ${{ secrets.SRCCLR_API_TOKEN }}
+        run: | 
+          export SRCCLR_SCM_URI="https://github.com/lucasferreiram3/PyGoat.git"
+          export SRCCLR_SCM_REF=${{ github.workflow }}
+          export SRCCLR_SCM_REF_TYPE="branch"
+          export SRCCLR_SCM_REV=${{ github.run_id }}
+        
+          export EXTRA_ARGS='--update-advisor --uri-as-name'
+          curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan $EXTRA_ARGS
+         
+        continue-on-error: true
