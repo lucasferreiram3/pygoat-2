@@ -43,24 +43,13 @@ jobs:
     container:
       image: veracode/api-wrapper-java:latest
       options: --user root
-    outputs:
-      sandbox-name: ${{ steps.set-sandbox-name.outputs.sandbox-name }}
     steps:
     - uses: actions/checkout@master
-    
-    - name: get branch name
-      run: |
-          echo ${{ github.head_ref }}
-          branchName="${{ github.head_ref }}"
-          if [[ -z "$branchName" ]]; then
-            branchName="${{ github.ref }}"
-          fi
-          echo "::set-output name=sandbox-name::$branchName"
 
     - name: scan 
       run: |
           zip -r pygoat.zip . -i '*.py' '*.html' '*.js'
-          java -jar /opt/veracode/api-wrapper.jar -vid "${{ secrets.VID }}" -vkey "${{ secrets.VKEY }}" -action UploadAndScan -createprofile false -appname "Pygoat-Showroom" -version "${{ github.run_id }}" -filepath pygoat.zip -createsandbox true -sandboxname "${branchName}"
+          java -jar /opt/veracode/api-wrapper.jar -vid "${{ secrets.VID }}" -vkey "${{ secrets.VKEY }}" -action UploadAndScan -createprofile false -appname "Pygoat-Showroom" -version "${{ github.run_id }}" -filepath pygoat.zip -createsandbox true -sandboxname ref/branch@github.dev
   
   Veracode-SCA-Agent-Action:
     runs-on: ubuntu-latest
