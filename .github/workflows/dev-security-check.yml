@@ -16,7 +16,7 @@ jobs:
       image: python:3.11.0b1-buster
     steps:
     - name: checkout
-    - uses: actions/checkout@master
+      uses: actions/checkout@master
 
     - name: install requeriments
       run: |
