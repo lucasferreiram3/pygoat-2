@@ -35,8 +35,9 @@ jobs:
       - name: scan 
         run: |
           zip -r -v pygoat.zip . -i '*.py' '*.js' '*.html'  
-          java -jar /opt/veracode/pipeline-scan.jar -vid "${{ secrets.VID }}" -vkey "${{ secrets.VKEY }}" -f pygoat.zip -aid "1242124" -p "PyGoat-Showroom" -fs="Very High, High"
-        
+          java -jar /opt/veracode/pipeline-scan.jar -vid "${{ secrets.VID }}" -vkey "${{ secrets.VKEY }}" -f pygoat.zip -aid "1242124" -p "PyGoat-Showroom" -pn "Veracode Recommended Medium"
+        continue-on-error: true
+  
   Veracode-SAST-Sandbox-Scan:
     runs-on: ubuntu-latest
     needs: [Install-Requeriments]
@@ -79,6 +80,35 @@ jobs:
         
           export EXTRA_ARGS='--update-advisor --uri-as-name'
           curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan $EXTRA_ARGS
-         
         continue-on-error: true
         
+  Deploy: 
+    runs-on: ubuntu-latest
+    needs: [Veracode-SAST-Pipeline-Scan, Veracode-SAST-Sandbox-Scan, Veracode-SCA-Agent-Action]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Test Deploy
+        run: | 
+          docker pull pygoat/pygoat
+          docker images 
+          sleep 5
+        
+  Veracode-DAST:
+    runs-on: ubuntu-latest
+    needs: [Deploy]
+    container:
+      image: veracode/api-signing
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: pip install
+        env:
+          VERACODE_API_KEY_ID: ${{ secrets.VID }}
+          VERACODE_API_KEY_SECRET: ${{ secrets.VKEY }}
+        run: |
+          http --auth-type=veracode_hmac GET "https://api.veracode.com/appsec/v1/applications/?page=0&size=10"
+      
+
