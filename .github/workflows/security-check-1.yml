@@ -72,3 +72,14 @@ jobs:
          
         continue-on-error: true
         
+  Deploy-Test: 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Test Deploy
+        run: | 
+          docker pull pygoat/pygoat
+          docker images 
+          sleep 5
