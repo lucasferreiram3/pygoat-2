@@ -1,0 +1,85 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Veracode Scan
+
+on:
+  push:
+    branches: [ feature-1 ]
+  pull_request:
+    branches: [ feature-1 ]
+
+  workflow_dispatch:
+
+jobs:
+  Veracode-SAST-Pipeline-Scan:
+    runs-on: ubuntu-latest
+
+    container:
+      image: veracode/pipeline-scan:latest
+      options: --user root
+    steps:
+      - name: checkout
+        uses: actions/checkout@master
+
+      - name: scan 
+        run: |
+          zip -r -v pygoat.zip . -i '*.py' '*.js' '*.html'  
+          java -jar /opt/veracode/pipeline-scan.jar -vid "${{ secrets.VID }}" -vkey "${{ secrets.VKEY }}" -f pygoat.zip -aid "1242124" -p "PyGoat-Showroom"
+                
+        continue-on-error: true
+        
+  Veracode-SAST-Sandbox-Scan:
+    runs-on: ubuntu-latest
+    container:
+      image: veracode/api-wrapper-java:latest
+      options: --user root
+    steps:
+    - uses: actions/checkout@master
+               
+    - name: scan 
+      run: |
+          zip -r pygoat.zip . -i '*.py' '*.html' '*.js'
+          java -jar /opt/veracode/api-wrapper.jar -vid "${{ secrets.VID }}" -vkey "${{ secrets.VKEY }}" -action UploadAndScan -createprofile false -appname "Pygoat-Showroom" -version "${{ github.run_id }}" -filepath pygoat.zip -createsandbox true -sandboxname SANDBOX_2
+  
+  Veracode-SCA-Agent-Action:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.11.0b1-buster
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: pip install
+        run: |
+          python -m pip install --no-cache-dir pip==22.0.4
+      
+      - name: Listing
+        run: |
+          ls -lah
+      
+      - name: Run Veracode SCA
+        env:
+          SRCCLR_API_TOKEN: ${{ secrets.SRCCLR_API_TOKEN }}
+        run: | 
+          export SRCCLR_SCM_URI="https://github.com/lucasferreiram3/PyGoat.git"
+          export SRCCLR_SCM_REF=${{ github.workflow }}
+          export SRCCLR_SCM_REF_TYPE="branch"
+          export SRCCLR_SCM_REV=${{ github.run_id }}
+        
+          export EXTRA_ARGS='--update-advisor --uri-as-name'
+          curl -sSL https://download.sourceclear.com/ci.sh | bash -s scan $EXTRA_ARGS
+         
+        continue-on-error: true
+        
+  Deploy-Test: 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Test Deploy
+        run: | 
+          docker pull pygoat/pygoat
+          docker images 
+          sleep 5
