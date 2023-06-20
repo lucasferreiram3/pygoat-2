@@ -104,11 +104,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       
-      - name: pip install
+      - name: DAST
         env:
           VERACODE_API_KEY_ID: ${{ secrets.VID }}
           VERACODE_API_KEY_SECRET: ${{ secrets.VKEY }}
         run: |
-          http --auth-type=veracode_hmac GET "https://api.veracode.com/appsec/v1/applications/?page=0&size=10"
+          http --auth-type=veracode_hmac GET "https://api.veracode.com/appsec/v1/applications/?name=Pygoat-Showroom"
       
 
