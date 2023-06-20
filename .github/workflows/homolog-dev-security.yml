@@ -98,8 +98,6 @@ jobs:
   Veracode-DAST:
     runs-on: ubuntu-latest
     needs: [Deploy]
-    container:
-      image: veracode/api-signing
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -109,6 +107,6 @@ jobs:
           VERACODE_API_KEY_ID: ${{ secrets.VID }}
           VERACODE_API_KEY_SECRET: ${{ secrets.VKEY }}
         run: |
-          http --auth-type=veracode_hmac GET "https://api.veracode.com/appsec/v1/applications/?name=Pygoat-Showroom"
+          docker run --rm --env VERACODE_API_KEY_ID=${{ secrets.VID }} --env VERACODE_API_KEY_SECRET=${{ secrets.VKEY }} veracode/api-signing:cmd GET "https://api.veracode.com/appsec/v1/applications/?page=0&size=10"
       
 
