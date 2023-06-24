@@ -24,7 +24,7 @@ jobs:
         python -m pip install --no-cache-dir pip==22.0.4
 
   Sonar-Check:
-    name: sonar-Check
+    name: Sonar-Check
     needs: [Install-Requeriments]
     runs-on: ubuntu-latest
     steps:
