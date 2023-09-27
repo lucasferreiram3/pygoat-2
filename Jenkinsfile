@@ -4,6 +4,7 @@ pipeline {
         caminhoPacote = 'uploadToVeracode/pygoat.zip'
         wrapperVersion = '23.8.12.0'
     }
+
     stages {
         stage('Clean') { 
             steps {
@@ -16,7 +17,7 @@ pipeline {
         stage('Archive') { 
             steps {
                 sh 'mkdir uploadToVeracode'
-                sh 'zip -r -v uploadToVeracode/pygoat.zip . -i '*.py' '*.js' '*.html' '
+                sh 'zip -r -v uploadToVeracode/pygoat.zip . -i "*.py" "*.js" "*.html" '
             }
         }
 
